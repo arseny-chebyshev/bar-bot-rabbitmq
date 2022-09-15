@@ -30,7 +30,7 @@ async def confirm_order(c: CallbackQuery, b: Button, d: DialogManager):
         quantity = d.data['aiogd_context'].widget_data[f'dish_{dish_id}_quantity']
         dish_summary = dish.price * quantity
         details += f"{dish.name} х {quantity} ---- {dish_summary}Р\n"
-        order['dishes'].append({"dish": dish.name, "price":dish.price, 
+        order['dishes'].append({"id": dish.id, "name": dish.name, "price":dish.price, 
                                  "quantity": quantity, "dish_summary": dish_summary})
         order['summary'] += dish_summary
     details += f"""Если всё верно, нажми на кнопку оформить, и мы оформим заказ. 
@@ -39,7 +39,7 @@ async def confirm_order(c: CallbackQuery, b: Button, d: DialogManager):
 Итого: {order['summary']}Р"""
     await c.message.delete()
     await c.message.answer(details, reply_markup=request_contact_button_kbd)
-    await d.data['state'].update({"order": order})
+    await d.data['state'].update_data({"order": order})
     await d.mark_closed()
     await RegisterUser.send_contact.set()
 
@@ -116,9 +116,10 @@ async def switch_to_list(c: CallbackQuery, b: Button, d: DialogManager):
     await d.switch_to(DishDialog.select_dish)
 
 quantity_edit = Window(Const(text="Выберите необходимое количество:"),
-                       Button(Const(text="-"), on_click=change_quantity, id='decrease'),
                        Format(text="{dish.name}, {quantity}шт., {dish_summary}P"),
-                       Button(Const(text='+'), on_click=change_quantity, id='increase'),
+                       Group(Button(Const(text="-"), on_click=change_quantity, id='decrease'),
+                             Button(Const(text='+'), on_click=change_quantity, id='increase'),
+                             width=2),
                        Button(continue_button, on_click=switch_to_list,
                               id='continue'),
                        cancel_button,
@@ -134,7 +135,7 @@ async def get_dish_detail(**kwargs):
         quantity = kwargs['aiogd_context'].widget_data[f'dish_{dish_id}_quantity']
         dish_summary = dish.price * quantity
         details += f"{dish.name} х {quantity} ---- {dish_summary}Р\n"
-        dishes['dishes'].append({"dish": dish.name, "price":dish.price, 
+        dishes['dishes'].append({"id": dish.id,"name": dish.name, "price":dish.price, 
                                  "quantity": quantity, "dish_summary": dish_summary})
         dishes['summary'] += dish_summary
     details += f"""Итого: {dishes['summary']}Р

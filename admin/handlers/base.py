@@ -1,44 +1,15 @@
-from lib2to3.pytree import Base
-from msilib.schema import Error
+from admin.states.admin import OrderDialog
 from db.models import Dish, Order, Guest
 from pathlib import Path
-import aiogram
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram_dialog import DialogManager
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.dispatcher.filters import Command, Text
-from settings import post_channel
-from states.admin import RegisterUser, DishDialog, DishState
+from settings import admin_id
+from states.admin import AdminDialog, DishDialog, DishState
 from keyboards.menu.kbds import *
-from loader import dp
-
-
-@dp.message_handler(state=RegisterUser.send_contact, content_types=aiogram.types.ContentType.CONTACT)
-async def process_contact(msg: Message, state: FSMContext):
-    data = await state.get_data()
-    await dp.bot.send_message(chat_id=post_channel,
-                              text=f"""<strong>Услуга:</strong>
-<strong>Стоимость:</strong> 
-<strong>Время:</strong>
-<strong>Продолжительность:</strong>
-<strong>Мастер:</strong>""")
-    await msg.forward(chat_id=post_channel)
-    await msg.answer("Спасибо! Запись была оформлена. За день до встречи придёт СМС-напоминание на указанный номер.",
-                     reply_markup=ReplyKeyboardRemove())
-    await state.reset_state(with_data=True)
-
-
-@dp.message_handler(Text(equals=["❌ Отмена"]), state=RegisterUser.send_contact)
-async def cancel_record(msg: Message, state: FSMContext):
-    await msg.answer("Запись отменена.", reply_markup=ReplyKeyboardRemove())
-    await state.reset_state(with_data=True)
-
-
-@dp.message_handler(state=RegisterUser.send_contact)
-async def require_push(msg: Message, state: FSMContext):
-    await msg.answer("Пожалуйста, нажми на одну из кнопок. Я не смогу продолжать диалог дальше, пока они тут 😓")
-
+from loader import dp, admin_bot
 
 @dp.message_handler(commands=["start"], state=None)
 async def start(msg: Message):
@@ -48,6 +19,12 @@ async def start(msg: Message):
 /stat
 /help - узнать ответы на часто задаваемые вопросы""")
 
+@dp.message_handler(commands='admin')
+async def start_admin(msg: Message, dialog_manager: DialogManager):
+    if int(msg.from_user.id) == int(admin_id):
+        await dialog_manager.start(AdminDialog.start)
+    else:
+        await msg.answer("У Вас нет прав администратора.")
 
 @dp.message_handler(Command('dish'))
 async def select_dish_action(msg: Message, state: FSMContext):
@@ -103,6 +80,10 @@ async def create_dish(msg: Message, state: FSMContext):
         case "Отмена":
             await msg.answer("Действие отменено.", reply_markup=ReplyKeyboardRemove())
             await state.reset_state(with_data=True)    
+
+@dp.message_handler(commands=['orders'])
+async def start_dish_dialog(msg: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(OrderDialog.select_order)
 
 @dp.message_handler(commands=['help'], state=None)
 async def show_help(msg: Message):

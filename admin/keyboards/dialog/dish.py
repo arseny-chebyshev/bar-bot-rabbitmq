@@ -6,7 +6,26 @@ from aiogram_dialog import Window, DialogManager, Dialog
 from aiogram_dialog.widgets.kbd import Radio, Button, Group, Back, Next
 from aiogram_dialog.widgets.text import Format, Const
 from states.admin import DishDialog, DishState
-from keyboards.dialog.base_dialog_buttons import cancel_button, continue_button, back_button, default_nav
+from keyboards.dialog.base_dialog_buttons import cancel_button, continue_button, back_button, default_nav, back_to_start_button
+
+async def select_dish_menu(c: CallbackQuery, b: Button, d: DialogManager):
+    match b.widget_id:
+        case 'new_dish':
+            await d.data['state'].reset_state(with_data=True)
+            await c.message.delete()
+            await c.message.answer("Введите имя позиции:")
+            await DishState.insert_name.set()
+        case 'dish_list':
+            await d.start(DishDialog.select_dish)
+
+dish_start = Window(Const("Пожалуйста, выбери действие:"),
+                    Group(Button(Const("Создать новую позицию"),
+                                     id="new_dish", on_click=select_dish_menu),
+                          Button(Const("Изменить/удалить текущие позиции"),
+                                     id="dish_list", on_click=select_dish_menu),
+                              width=1),
+                          back_to_start_button,
+                        state=DishDialog.start)
 
 async def get_dishes(**kwargs):
     return {"dishes": [(f"{dish.name}, {dish.price}", dish.id) for dish in Dish.objects.all()]}
@@ -24,7 +43,7 @@ dish_list = Window(Const("Выбери позицию из списка:"),
                          Button(continue_button,
                                 on_click=switch_to_dish_details,
                                   id='continue'),
-                         cancel_button,
+                         default_nav,
                          getter=get_dishes,
                          state=DishDialog.select_dish)
 
@@ -60,4 +79,4 @@ dish_detail =  Window(Format(text="{dish.name}, {dish.price}"),
                       getter=get_dish_detail,
                       state=DishDialog.edit_dish)
 
-dish_dialog = Dialog(dish_list, dish_detail)
+dish_dialog = Dialog(dish_start, dish_list, dish_detail)

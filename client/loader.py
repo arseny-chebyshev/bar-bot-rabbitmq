@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram_dialog import DialogRegistry
 
 sys.path.insert(0, '..')
-bot = Bot(token=bot_token, parse_mode="HTML")
+client_bot = Bot(token=bot_token, parse_mode="HTML")
 storage = MemoryStorage()
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher(client_bot, storage=storage)
 registry = DialogRegistry(dp)

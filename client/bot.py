@@ -1,11 +1,10 @@
 from aiogram import executor
-from aiogram.utils.executor import start_webhook
 import logging
-from loader import dp, bot, registry
+from loader import dp, client_bot, registry
 from settings import admin_id
 
 async def on_startup(dispatcher):
-    await bot.send_message(admin_id, "Starting..")
+    await client_bot.send_message(admin_id, "Starting..")
 
 async def on_shutdown(dispatcher):
     pass
