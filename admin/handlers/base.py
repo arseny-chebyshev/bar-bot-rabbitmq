@@ -1,3 +1,4 @@
+import asyncio
 from admin.states.admin import OrderDialog
 from db.models import Dish, Order, Guest
 from pathlib import Path
@@ -10,6 +11,7 @@ from settings import admin_id
 from states.admin import AdminDialog, DishDialog, DishState
 from keyboards.menu.kbds import *
 from loader import dp, admin_bot
+from utils import notify_admin
 
 @dp.message_handler(commands=["start"], state=None)
 async def start(msg: Message):
@@ -18,6 +20,7 @@ async def start(msg: Message):
 /orders
 /stat
 /help - узнать ответы на часто задаваемые вопросы""")
+    asyncio.ensure_future(notify_admin())
 
 @dp.message_handler(commands='admin')
 async def start_admin(msg: Message, dialog_manager: DialogManager):

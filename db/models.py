@@ -1,9 +1,8 @@
-import asyncio
-from django.db.models.signals import pre_save
+import json
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import models
 from manage import init_django
-from admin.utils import notify_admin
 
 init_django()
 # Create your models here.
@@ -17,24 +16,31 @@ class Dish(models.Model):
 class Guest(models.Model):
     id = models.BigIntegerField(primary_key=True, null=False, blank=False)
     name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=255)
+    phone = models.CharField(max_length=50)
+    debt = models.FloatField(default=0.0)
 
-    
     def __str__(self) -> str:
-        return f"{self.name}, {self.phone}"
+        return f"{self.name}, {self.debt}"
 
 class Order(models.Model):
     dish = models.ManyToManyField(to='Dish', through='DishQuantity', related_name='orders_with_dish')
     guest = models.ForeignKey(to=Guest, related_name='orders_from_guest', on_delete=models.DO_NOTHING)
     is_ready = models.BooleanField(default=False)
     total = models.FloatField(null=True, blank=True)
-    
+    time = models.DateTimeField(auto_now_add=True)
+
     def __str__(self) -> str:
         return f"{self.id} {self.guest.name}, {self.total}, {'ГОТОВ' if self.is_ready else 'НЕ ГОТОВ'}"
         
     def get_summary(self):
         total = self.dish.all().aggregate(total=models.Sum('price'))
         return total['total']
+
+    def save(self, *args, **kwargs):
+        self.guest.debt += self.total
+        self.guest.save()
+        super(Order, self).save(*args, **kwargs)
+
 
 
 class DishQuantity(models.Model):
@@ -45,14 +51,6 @@ class DishQuantity(models.Model):
     def __str__(self):
         return f"{self.dish}: {self.quantity}"
 
-@receiver(pre_save, sender=Order)
-def send_notification(sender, instance, **kwargs):
-    quantities = []
-    for dish in DishQuantity.objects.filter(order=instance):
-        print(dish)
-        quantities.append(f"{dish.dish.name} x {dish.dish.price} ---- {dish.dish.price * dish.quantity}Р\n")
-    text = f"""Привет из models!\nНовый заказ #{instance.id}\n
-Заказал: {instance.guest}
-Состав: {''.join(quantities)}
-Сумма: {instance.total}"""
-    asyncio.ensure_future(notify_admin(text))
+@receiver(post_save, sender=Order)
+def send_notification(sender, instance, created, **kwargs):
+    pass

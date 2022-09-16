@@ -1,4 +1,5 @@
 import asyncio
+import json
 from db.models import Dish, DishQuantity, Order, Guest
 from pathlib import Path
 import aiogram
@@ -6,7 +7,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram_dialog import DialogManager
 from aiogram.types import Message, ReplyKeyboardRemove
-from aiogram.dispatcher.filters import Command, Text
+from aiogram.dispatcher.filters import Text
 from states.client import RegisterUser, DishDialog, DishState
 from keyboards.menu.kbds import *
 from loader import dp, client_bot
@@ -19,9 +20,8 @@ async def process_contact(msg: Message, state: FSMContext):
     from client.utils import wait_for_order
 
     data = await state.get_data()
-
     guest_cred = {'id': int(msg.contact['user_id']), 
-                  'name': f"{msg.contact['first_name']}",
+                  'name': f"{msg.contact['first_name']}{msg.contact['last_name'] if 'last_name' in dict(msg.contact).keys() else ''}",
                   'phone': msg.contact['phone_number']}
     guest = Guest.objects.filter(**guest_cred).first()
     if not guest:
@@ -34,7 +34,12 @@ async def process_contact(msg: Message, state: FSMContext):
     await msg.answer(f"""Спасибо! Заказ был оформлен. Номер Вашего заказа: {order.id}
 Ожидайте, я проинформирую Вас о готовности""", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)
-    await admin_bot.send_message(chat_id=admin_id, text=f"""Order: {order.id} {data['order']}""")
+    with open('../orders.json', 'r+', encoding='utf-8') as f:
+        data = json.load(f)
+        data['orders'].append(order.id)
+        f.seek(0)
+        json.dump(data, f, indent=4)
+        f.truncate()
     asyncio.ensure_future(wait_for_order(client_bot, msg.from_user.id, order.id))
 
     

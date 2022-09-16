@@ -43,10 +43,10 @@ async def switch_edit_order(c: CallbackQuery, b: Button, d: DialogManager):
         case "delete":
             order_id = d.data['aiogd_context'].widget_data['r_order']
             order = Order.objects.filter(id=order_id).first()
-            order_name = order.id
+            order_id = order.id
             order.delete()
             await c.message.delete()
-            await c.message.answer(f"Заказ {order} удален.")
+            await c.message.answer(f"Заказ #{id} удален.")
             d.data['aiogd_context'].widget_data.pop('r_order')
             await d.switch_to(OrderDialog.select_order)
 
