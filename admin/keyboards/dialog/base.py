@@ -13,7 +13,7 @@ async def select_menu(c: CallbackQuery, b: Button, d: DialogManager):
         case 'get_dishes':
             await d.start(DishDialog.start)
         case 'get_orders':
-            await d.start(OrderDialog.select_order)
+            await d.start(OrderDialog.start)
         case 'get_stats':
             await d.start(StatDialog.start)
 

@@ -5,11 +5,15 @@ request_phone_button_kbd = ReplyKeyboardMarkup(keyboard=[
 ], resize_keyboard=True)
 
 dish_menu = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Добавить новую позицию')],
-    [KeyboardButton(text='Изменить текущие позиции')],
+    [KeyboardButton(text='➕Добавить новую позицию')],
+    [KeyboardButton(text='🖊Изменить текущие позиции')],
+],  resize_keyboard=True, one_time_keyboard=True)
+
+cancel_menu_button = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='❌Отмена')],
 ],  resize_keyboard=True, one_time_keyboard=True)
 
 confirm_dish_menu = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Подтвердить')],
-    [KeyboardButton(text='Отмена')],
+    [KeyboardButton(text='✅Подтвердить')],
+    [KeyboardButton(text='❌Отмена')],
 ],  resize_keyboard=True, one_time_keyboard=True)

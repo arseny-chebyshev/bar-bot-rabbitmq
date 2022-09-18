@@ -3,9 +3,10 @@ from db.models import Dish
 from filters.base import is_button_selected
 from aiogram.types import CallbackQuery
 from aiogram_dialog import Window, DialogManager, Dialog
-from aiogram_dialog.widgets.kbd import Radio, Button, Group, Back, Next
+from aiogram_dialog.widgets.kbd import Radio, Button, Group, ManagedRadioAdapter
 from aiogram_dialog.widgets.text import Format, Const
 from states.admin import DishDialog, DishState
+from keyboards.menu.kbds import cancel_menu_button
 from keyboards.dialog.base_dialog_buttons import cancel_button, continue_button, back_button, default_nav, back_to_start_button
 
 async def select_dish_menu(c: CallbackQuery, b: Button, d: DialogManager):
@@ -13,7 +14,7 @@ async def select_dish_menu(c: CallbackQuery, b: Button, d: DialogManager):
         case 'new_dish':
             await d.data['state'].reset_state(with_data=True)
             await c.message.delete()
-            await c.message.answer("Введите имя позиции:")
+            await c.message.answer("Введи имя новой позиции: ", reply_markup=cancel_menu_button)
             await DishState.insert_name.set()
         case 'dish_list':
             await d.start(DishDialog.select_dish)
@@ -28,36 +29,33 @@ dish_start = Window(Const("Пожалуйста, выбери действие:"
                         state=DishDialog.start)
 
 async def get_dishes(**kwargs):
-    return {"dishes": [(f"{dish.name}, {dish.price}", dish.id) for dish in Dish.objects.all()]}
+    return {"dishes": [(str(dish), dish.id) for dish in Dish.objects.all()]}
 
-@is_button_selected(key='r_dish')
-async def switch_to_dish_details(c: CallbackQuery, b: Button, d: DialogManager):
+async def switch_to_dish_details(c: CallbackQuery, m: ManagedRadioAdapter, d: DialogManager,  b: Button):
     await d.switch_to(DishDialog.edit_dish)
 
 dish_list = Window(Const("Выбери позицию из списка:"),
-                         Group(Radio(Format("✅{item[0]}"),
+                         Group(Radio(Format("{item[0]}"),
                                        Format("{item[0]}"),
-                                       id="r_dish", items='dishes',
+                                       id="r_dish", items='dishes', on_click=switch_to_dish_details,
                                        item_id_getter=operator.itemgetter(1)),
                                  width=2),
-                         Button(continue_button,
-                                on_click=switch_to_dish_details,
-                                  id='continue'),
                          default_nav,
                          getter=get_dishes,
                          state=DishDialog.select_dish)
 
 async def get_dish_detail(**kwargs):
     dish_id = kwargs['aiogd_context'].widget_data['r_dish']
-    return {"dish": Dish.objects.filter(id=dish_id)[0]}
+    return {"dish": Dish.objects.filter(id=dish_id).first()}
 
 async def switch_edit_dish(c: CallbackQuery, b: Button, d: DialogManager):
     match b.widget_id:
         case "edit":
-            dish_id = d.data['aiogd_context'].widget_data['r_dish']
+            old_dish = Dish.objects.filter(id=int(d.data['aiogd_context'].widget_data.pop('r_dish'))).first()
+            dish_id = old_dish.id
             await d.data['state'].reset_state(with_data=True)
             await c.message.delete()
-            await c.message.answer("Введите имя позиции:")
+            await c.message.answer(f"Введи новое имя:\nСтарое имя:{old_dish.name}\nСтарая цена:{old_dish.price}LKR")
             await DishState.insert_name.set()
             await d.data['state'].update_data({"old_dish": dish_id})
         case "delete":

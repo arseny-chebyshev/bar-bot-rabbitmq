@@ -7,7 +7,7 @@ from keyboards.menu.kbds import request_contact_button_kbd
 
 async def cancel(c: CallbackQuery, b: Button, d: DialogManager):
     await c.message.delete()
-    await c.message.answer(text=f"Действие отменено.")
+    await c.message.answer(text=f"Действие отменено.\nВведи команду /start, чтобы начать снова")
     await d.mark_closed()
     await d.data['state'].reset_state(with_data=True)
 

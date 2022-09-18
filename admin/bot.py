@@ -1,10 +1,13 @@
+import asyncio
 from aiogram import executor
 import logging
 from loader import dp, admin_bot, registry
 from settings import admin_id
+from utils import notify_admin
 
 async def on_startup(dispatcher):
     await admin_bot.send_message(admin_id, "Starting..")
+    asyncio.ensure_future(notify_admin())
 
 async def on_shutdown(dispatcher):
     pass

@@ -1,5 +1,6 @@
 import asyncio
 import json
+from decimal import Decimal
 from db.models import Dish, DishQuantity, Order, Guest
 from pathlib import Path
 import aiogram
@@ -18,21 +19,24 @@ from settings import admin_id
 @dp.message_handler(state=RegisterUser.send_contact, content_types=aiogram.types.ContentType.CONTACT)
 async def process_contact(msg: Message, state: FSMContext):
     from client.utils import wait_for_order
-
     data = await state.get_data()
     guest_cred = {'id': int(msg.contact['user_id']), 
-                  'name': f"{msg.contact['first_name']}{msg.contact['last_name'] if 'last_name' in dict(msg.contact).keys() else ''}",
+                  'name': f"{msg.contact['first_name']}{''.join([' ',msg.contact['last_name']]) if 'last_name' in dict(msg.contact).keys() else ''}",
                   'phone': msg.contact['phone_number']}
-    guest = Guest.objects.filter(**guest_cred).first()
+    print(dict(msg.from_user))
+    if 'username' in dict(msg.from_user).keys():
+        guest_cred['username'] = msg.from_user['username']
+    print("GUEST CRED", guest_cred)
+    guest = Guest.objects.filter(id=int(msg.contact['user_id'])).first()
     if not guest:
         guest = Guest(**guest_cred)
         guest.save()
-    order = Order.objects.create(guest=guest, is_ready=False, total=float(data['order']['summary']))
+    order = Order.objects.create(guest=guest, is_ready=False, total=Decimal(data['order']['summary']))
     for dish in data['order']['dishes']:
         order_dish = Dish.objects.filter(id=dish['id']).first()
         DishQuantity.objects.create(order=order, dish=order_dish, quantity=dish['quantity'])
-    await msg.answer(f"""Спасибо! Заказ был оформлен. Номер Вашего заказа: {order.id}
-Ожидайте, я проинформирую Вас о готовности""", reply_markup=ReplyKeyboardRemove())
+    await msg.answer(f"""Спасибо! Заказ был оформлен. Номер заказа: {order.id}
+Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)
     with open('../orders.json', 'r+', encoding='utf-8') as f:
         data = json.load(f)
@@ -46,7 +50,7 @@ async def process_contact(msg: Message, state: FSMContext):
 
 @dp.message_handler(Text(equals=["❌ Отмена"]), state=RegisterUser.send_contact)
 async def cancel_record(msg: Message, state: FSMContext):
-    await msg.answer("Запись отменена.", reply_markup=ReplyKeyboardRemove())
+    await msg.answer("Заказ отменен.", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)
 
 @dp.message_handler(state=RegisterUser.send_contact)

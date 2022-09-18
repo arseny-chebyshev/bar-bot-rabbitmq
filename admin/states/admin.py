@@ -16,6 +16,7 @@ class DishState(StatesGroup):
     confirm_dish = State()
 
 class OrderDialog(StatesGroup):
+    start = State()
     select_order = State()
     edit_order = State()
     confirm_edit = State()
