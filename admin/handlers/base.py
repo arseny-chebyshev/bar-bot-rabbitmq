@@ -5,7 +5,7 @@ from pathlib import Path
 from aiogram.dispatcher import FSMContext
 from aiogram_dialog import DialogManager
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
-from settings import admin_id
+from settings import admin_list
 from states.admin import AdminDialog, DishState
 from keyboards.menu.kbds import *
 from loader import dp
@@ -14,7 +14,7 @@ from utils import notify_admin
 
 @dp.message_handler(commands='start')
 async def start_admin(msg: Message, dialog_manager: DialogManager):
-    if int(msg.from_user.id) == int(admin_id):
+    if str(msg.from_user.id) in admin_list:
         await dialog_manager.start(AdminDialog.start)
     else:
         await msg.answer("Нет прав администратора для доступа.")
@@ -28,12 +28,10 @@ async def answer_callback(query: CallbackQuery):
         order.save()
         await query.answer("Заказ был отмечен готовым.")
         await query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup(row_width=2).row(
-            InlineKeyboardButton(text="Удалить", callback_data=f"callback_delete{order.id}")
+            InlineKeyboardButton(text="Скрыть", callback_data=f"callback_hide{order.id}")
         ))
-    elif call.startswith('delete'):
-        order = Order.objects.filter(id=int(call[6:])).first()
-        order.delete()
-        await query.answer("Заказ был удалён.")
+    elif call.startswith('hide'):
+        await query.answer("Заказ был скрыт.")
         await query.message.delete()
 
 @dp.message_handler(state=DishState.insert_name)
@@ -58,7 +56,7 @@ async def assert_dish(msg: Message, state: FSMContext, dialog_manager: DialogMan
             price = Decimal(msg.text)
             data = await state.get_data()
             dish_name = data['dish_name']
-            await msg.answer(f"Подтверди создание позиции:\nНазвание: {dish_name}\nЦена: {price}", 
+            await msg.answer(f"Подтверди создание позиции:\nНазвание: {dish_name}\nЦена: {price} LKR", 
                                reply_markup=confirm_dish_menu)
             await state.update_data({"dish_price": price})
             await DishState.confirm_dish.set()
@@ -87,7 +85,7 @@ async def create_dish(msg: Message, state: FSMContext, dialog_manager: DialogMan
                              reply_markup=ReplyKeyboardRemove())
             await state.reset_state(with_data=True) 
             if 'old_dish' in data.keys():
-                await dialog_manager.start(DishDialog.start)
+                await dialog_manager.start(AdminDialog.start)
             else:
                 await msg.answer("Введи имя новой позиции:", reply_markup=cancel_menu_button)
                 await DishState.insert_name.set()

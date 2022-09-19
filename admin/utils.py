@@ -1,33 +1,49 @@
 import asyncio
 import json
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.utils.callback_data import CallbackData
 from db.models import DishQuantity, Order
 from admin.loader import admin_bot
-from admin.settings import admin_id
+from admin.settings import admin_list
 
 async def notify_admin():
     while True:
         await asyncio.sleep(0.5)
-        with open('../orders.json', 'r+', encoding='utf-8') as f:
+        with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
             data = json.load(f)
             if data['orders']:
                 for order in data['orders']:
                     order = Order.objects.filter(id=int(order)).first()
                     quantities = []
                     for dish in DishQuantity.objects.filter(order=order):
-                        quantities.append(f"{dish.dish.name} x {dish.quantity}: {dish.dish.price * dish.quantity}LKR\n")
+                        quantities.append(f"{dish.dish.name} x {dish.quantity}: {dish.dish.price * dish.quantity} LKR\n")
                     text = f"""\nНовый заказ #{order.id}
 Заказал: {f'<a href="https://t.me/{order.guest.username}">{order.guest.name}</a>' if order.guest.username else order.guest.name}
 Телефон гостя: {order.guest.phone}
 Состав: \n{''.join(quantities)}
-Сумма: {order.total}LKR"""
+Сумма: {order.total} LKR"""
                     inline_kbd = InlineKeyboardMarkup(row_width=2).row(
                         InlineKeyboardButton(text="Отметить готовым", callback_data=f"callback_ready{order.id}"),
-                        InlineKeyboardButton(text="Удалить", callback_data=f"callback_delete{order.id}")
+                        InlineKeyboardButton(text="Скрыть", callback_data=f"callback_hide{order.id}")
                         )
-                    await admin_bot.send_message(chat_id=admin_id, text=text, reply_markup=inline_kbd)
+                    for admin_id in admin_list:
+                        message = await admin_bot.send_message(chat_id=admin_id, text=text, reply_markup=inline_kbd)
+                        asyncio.ensure_future(poll_order_message(chat_id=admin_id, message_id=message.message_id, order_id=order.id))
                 data['orders'] = []
             f.seek(0)
             json.dump(data, f, indent=4)
             f.truncate()
+
+async def poll_order_message(chat_id, message_id, order_id):
+    while True:
+        await asyncio.sleep(2)
+        order = Order.objects.filter(id=order_id).first()
+        if not order:
+            await admin_bot.delete_message(chat_id=chat_id, message_id=message_id)
+            break
+        if order.is_ready:
+            inline_kbd = InlineKeyboardMarkup(row_width=1).row(
+                         InlineKeyboardButton(text="Скрыть", callback_data=f"callback_hide{order.id}")
+                        )
+            await admin_bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=inline_kbd)
+            break

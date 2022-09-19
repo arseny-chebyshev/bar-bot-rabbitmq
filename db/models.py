@@ -15,7 +15,7 @@ class Dish(models.Model):
         return dish_quant['total']
 
     def __str__(self) -> str:
-        return f"{self.name}, {self.price}LKR"
+        return f"{self.name}, {self.price} LKR"
     class Meta:
         ordering = ['id']
 
@@ -27,7 +27,7 @@ class Guest(models.Model):
     debt = models.DecimalField(decimal_places=2, max_digits=8, default=0)
 
     def __str__(self) -> str:
-        return f"{self.name}, кредит: {self.debt}LKR"
+        return f"{self.name}, баланс: {self.debt} LKR"
 
 class Order(models.Model):
     dish = models.ManyToManyField(to='Dish', through='DishQuantity', related_name='orders_with_dish')
@@ -37,14 +37,14 @@ class Order(models.Model):
     time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        return f"{self.id} {self.guest.name}, {self.total}LKR, {'ГОТОВ' if self.is_ready else 'НЕ ГОТОВ'}"
+        return f"#{self.id} {self.guest.name}, {self.total} LKR, {'ГОТОВ' if self.is_ready else 'НЕ ГОТОВ'}"
         
     def get_summary(self):
         total = self.dish.all().aggregate(total=models.Sum('price'))
         return total['total']
 
     def save(self, *args, **kwargs):
-        self.guest.debt += self.total
+        self.guest.debt -= self.total
         self.guest.save()
         super(Order, self).save(*args, **kwargs)
 
@@ -56,4 +56,4 @@ class DishQuantity(models.Model):
     quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.dish}: {self.quantity}"
+        return f"{self.dish}: {self.quantity} шт."

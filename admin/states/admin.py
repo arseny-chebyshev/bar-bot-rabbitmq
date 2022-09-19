@@ -19,7 +19,8 @@ class OrderDialog(StatesGroup):
     start = State()
     select_order = State()
     edit_order = State()
-    confirm_edit = State()
+    confirm_delete = State()
+    confirm_purge = State()
 
 class StatDialog(StatesGroup):
     start = State()

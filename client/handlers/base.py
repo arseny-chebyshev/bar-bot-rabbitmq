@@ -12,9 +12,6 @@ from aiogram.dispatcher.filters import Text
 from states.client import RegisterUser, DishDialog, DishState
 from keyboards.menu.kbds import *
 from loader import dp, client_bot
-from admin.loader import admin_bot
-from settings import admin_id
-
 
 @dp.message_handler(state=RegisterUser.send_contact, content_types=aiogram.types.ContentType.CONTACT)
 async def process_contact(msg: Message, state: FSMContext):
@@ -23,10 +20,8 @@ async def process_contact(msg: Message, state: FSMContext):
     guest_cred = {'id': int(msg.contact['user_id']), 
                   'name': f"{msg.contact['first_name']}{''.join([' ',msg.contact['last_name']]) if 'last_name' in dict(msg.contact).keys() else ''}",
                   'phone': msg.contact['phone_number']}
-    print(dict(msg.from_user))
     if 'username' in dict(msg.from_user).keys():
         guest_cred['username'] = msg.from_user['username']
-    print("GUEST CRED", guest_cred)
     guest = Guest.objects.filter(id=int(msg.contact['user_id'])).first()
     if not guest:
         guest = Guest(**guest_cred)
@@ -35,17 +30,16 @@ async def process_contact(msg: Message, state: FSMContext):
     for dish in data['order']['dishes']:
         order_dish = Dish.objects.filter(id=dish['id']).first()
         DishQuantity.objects.create(order=order, dish=order_dish, quantity=dish['quantity'])
-    await msg.answer(f"""Спасибо! Заказ был оформлен. Номер заказа: {order.id}
+    await msg.answer(f"""Спасибо! Заказ был оформлен.\nНомер заказа: {order.id}
 Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)
-    with open('../orders.json', 'r+', encoding='utf-8') as f:
+    with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
         data = json.load(f)
         data['orders'].append(order.id)
         f.seek(0)
         json.dump(data, f, indent=4)
         f.truncate()
     asyncio.ensure_future(wait_for_order(client_bot, msg.from_user.id, order.id))
-
     
 
 @dp.message_handler(Text(equals=["❌ Отмена"]), state=RegisterUser.send_contact)

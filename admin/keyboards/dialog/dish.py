@@ -55,7 +55,7 @@ async def switch_edit_dish(c: CallbackQuery, b: Button, d: DialogManager):
             dish_id = old_dish.id
             await d.data['state'].reset_state(with_data=True)
             await c.message.delete()
-            await c.message.answer(f"Введи новое имя:\nСтарое имя:{old_dish.name}\nСтарая цена:{old_dish.price}LKR")
+            await c.message.answer(f"Старое имя: {old_dish.name}\nСтарая цена: {old_dish.price} LKR\nВведи новое имя:")
             await DishState.insert_name.set()
             await d.data['state'].update_data({"old_dish": dish_id})
         case "delete":
@@ -72,8 +72,8 @@ dish_detail =  Window(Format(text="{dish.name}, {dish.price}"),
                              Group(Button(Const("Изменить"), on_click=switch_edit_dish, id="edit"),
                                    Button(Const("Удалить"), on_click=switch_edit_dish, id="delete"),
                                    width=2),
-                          cancel_button,
                           back_button,
+                          cancel_button,
                       getter=get_dish_detail,
                       state=DishDialog.edit_dish)
 

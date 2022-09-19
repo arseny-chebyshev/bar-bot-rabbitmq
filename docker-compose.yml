@@ -1,0 +1,35 @@
+version: '3'
+services:
+  bar-db:
+    image: postgres:12.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      # https://www.postgresql.org/docs/current/libpq-envars.html, подгружаются из .env
+      - POSTGRES_USER=$DB_USER
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+      - POSTGRES_DB=$DB_NAME
+  bar-admin-bot:
+    build: ./
+    volumes:
+      - queue:/bot/queue:rw
+    command: [sh, -c, "python manage.py makemigrations &&
+                       python manage.py migrate &&
+                       cd admin &&
+                       python bot.py"]
+    depends_on:
+      - bar-db
+  bar-client-bot:
+    build: ./
+    volumes:
+      - queue:/bot/queue:rw
+    command: [sh, -c, "cd client &&
+                       python bot.py"]
+    depends_on:
+      - bar-db
+      - bar-admin-bot
+    restart: on-failure
+
+volumes:
+  queue:
+  postgres_data:

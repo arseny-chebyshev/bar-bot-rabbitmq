@@ -33,14 +33,14 @@ async def confirm_order(c: CallbackQuery, b: Button, d: DialogManager):
         dish = Dish.objects.filter(id=dish_id).first()
         quantity = d.data['aiogd_context'].widget_data[f'dish_{dish_id}_quantity']
         dish_summary = dish.price * quantity
-        details += f"{dish.name} х {quantity}: {dish_summary}LKR\n"
+        details += f"{dish.name} х {quantity}: {dish_summary} LKR\n"
         order['dishes'].append({"id": dish.id, "name": dish.name, "price":dish.price, 
                                  "quantity": quantity, "dish_summary": dish_summary})
         order['summary'] += dish_summary
     details += f"""Если всё верно, нажми на кнопку "Заказать", и я оформлю заказ. 
 Если нет - нажми на кнопку "Отмена", и всё отменится.
 
-Итого: {order['summary']}LKR"""
+Итого: {order['summary']} LKR"""
     await c.message.delete()
     await c.message.answer(details, reply_markup=request_contact_button_kbd)
     await d.data['state'].update_data({"order": order})
@@ -120,7 +120,7 @@ async def switch_to_list(c: CallbackQuery, b: Button, d: DialogManager):
     await d.switch_to(DishDialog.select_dish)
 
 quantity_edit = Window(Const(text="Выбери необходимое количество:"),
-                       Format(text="{dish.name}, {quantity}шт., {dish_summary}LKR"),
+                       Format(text="{dish.name}, {quantity}шт., {dish_summary} LKR"),
                        Group(Button(Const("⬅ Назад"), id='back',when='back', on_click=switch_to_list),
                              Button(Const(text="-"), on_click=change_quantity, id='decrease', when='minus'),
                              Button(Const(text='+'), on_click=change_quantity, id='increase'),
@@ -132,30 +132,4 @@ quantity_edit = Window(Const(text="Выбери необходимое коли�
                        state=DishDialog.edit_dish_quantity)
 
 
-async def get_dish_detail(**kwargs):
-    details = ""
-    dishes = {"dishes": [], "summary": 0}
-    for dish_id in kwargs['aiogd_context'].widget_data['m_dish']:
-        dish = Dish.objects.filter(id=dish_id).first()
-        quantity = kwargs['aiogd_context'].widget_data[f'dish_{dish_id}_quantity']
-        dish_summary = dish.price * quantity
-        details += f"{dish.name} х {quantity} ---- {dish_summary}LKR\n"
-        dishes['dishes'].append({"id": dish.id,"name": dish.name, "price":dish.price, 
-                                 "quantity": quantity, "dish_summary": dish_summary})
-        dishes['summary'] += dish_summary
-    details += f"""
-
-Итого: {dishes['summary']}LKR
-Если всё верно, нажми на кнопку продолжить, и мы оформим заказ."""
-    return {"details": details}
-
-
-
-order_summary =  Window(Format("""Отлично, вот детали заказа:
-{details}"""),
-                        Button(continue_button, id='continue', on_click=confirm_order),
-                        default_nav,
-                        getter=get_dish_detail,
-                        state=DishDialog.confirm_order)
-
-dish_dialog = Dialog(dish_list, quantity_edit, order_summary)
+dish_dialog = Dialog(dish_list, quantity_edit)

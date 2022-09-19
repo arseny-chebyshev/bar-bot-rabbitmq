@@ -55,7 +55,7 @@ async def reset_debt(c: CallbackQuery, b: Button, d: DialogManager):
     guest.save()
     await d.switch_to(StatDialog.list_guest_total)
 
-guest_detail =  Window(Format(text="{guest}\nЗаказы:\n{guest_orders}\n\nСумма заказов: {guest.debt}"), 
+guest_detail =  Window(Format(text="{guest}\nЗаказы:\n{guest_orders}\n\nБаланс: {guest.debt} LKR"), 
                        Button(Const("Сбросить баланс гостя"), id='reset_debt', on_click=reset_debt),        
                        back_button,
                        cancel_button,

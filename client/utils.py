@@ -9,4 +9,4 @@ async def wait_for_order(bot, chat_id, order_id):
 Его можно оплатить при получении.""")
             break
         else:
-            await asyncio.sleep(5.0)
+            await asyncio.sleep(2.0)
