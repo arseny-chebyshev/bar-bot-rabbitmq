@@ -30,6 +30,8 @@ async def process_contact(msg: Message, state: FSMContext):
     for dish in data['order']['dishes']:
         order_dish = Dish.objects.filter(id=dish['id']).first()
         DishQuantity.objects.create(order=order, dish=order_dish, quantity=dish['quantity'])
+    guest.debt -= data['order']['summary']
+    guest.save()
     await msg.answer(f"""Спасибо! Заказ был оформлен.\nНомер заказа: {order.id}
 Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)

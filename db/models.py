@@ -43,13 +43,6 @@ class Order(models.Model):
         total = self.dish.all().aggregate(total=models.Sum('price'))
         return total['total']
 
-    def save(self, *args, **kwargs):
-        self.guest.debt -= self.total
-        self.guest.save()
-        super(Order, self).save(*args, **kwargs)
-
-
-
 class DishQuantity(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)

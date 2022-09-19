@@ -46,7 +46,9 @@ guest_stat = Window(Const("Выбери гостя из списка:"),
 
 async def get_guest_details(**kwargs):
     guest = Guest.objects.filter(id=kwargs['aiogd_context'].widget_data['r_guest']).first()
-    return {"guest": guest, "guest_orders": '\n'.join([str(order) for order 
+    guest_details = f"""{f'<a href="https://t.me/{guest.username}">{guest.name}</a>' if guest.username else guest.name}
+Телефон гостя: {guest.phone}"""
+    return {"guest": guest, "guest_details": guest_details, "guest_orders": '\n'.join([str(order) for order 
                                                        in guest.orders_from_guest.all()])}
 
 async def reset_debt(c: CallbackQuery, b: Button, d: DialogManager):
@@ -55,7 +57,7 @@ async def reset_debt(c: CallbackQuery, b: Button, d: DialogManager):
     guest.save()
     await d.switch_to(StatDialog.list_guest_total)
 
-guest_detail =  Window(Format(text="{guest}\nЗаказы:\n{guest_orders}\n\nБаланс: {guest.debt} LKR"), 
+guest_detail =  Window(Format(text="Гость: {guest_details}\nЗаказы:\n{guest_orders}\n\nБаланс: {guest.debt} LKR"), 
                        Button(Const("Сбросить баланс гостя"), id='reset_debt', on_click=reset_debt),        
                        back_button,
                        cancel_button,
