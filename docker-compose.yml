@@ -13,7 +13,7 @@ services:
     build: ./
     volumes:
       - queue:/bot/queue:rw
-    command: [sh, -c, "python manage.py makemigrations &&
+    command: [sh, -c, "python manage.py makemigrations db &&
                        python manage.py migrate &&
                        cd admin &&
                        python bot.py"]
