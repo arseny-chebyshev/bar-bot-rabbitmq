@@ -3,7 +3,7 @@ services:
   bar-db:
     image: postgres:12.0-alpine
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - bar_postgres_data:/var/lib/postgresql/data/
     environment:
       # https://www.postgresql.org/docs/current/libpq-envars.html, подгружаются из .env
       - POSTGRES_USER=$DB_USER
