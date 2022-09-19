@@ -32,4 +32,4 @@ services:
 
 volumes:
   queue:
-  postgres_data:
+  bar_postgres_data:

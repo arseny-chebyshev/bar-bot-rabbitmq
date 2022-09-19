@@ -4,8 +4,9 @@ from loader import dp, client_bot, registry
 from settings import admin_list
 
 async def on_startup(dispatcher):
-    for admin_id in admin_list:
-        await client_bot.send_message(admin_id, "Starting..")
+    pass
+    """for admin_id in admin_list:
+        await client_bot.send_message(admin_id, "Starting..")"""
 
 async def on_shutdown(dispatcher):
     pass
