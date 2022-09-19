@@ -6,7 +6,6 @@ from settings import admin_list
 from utils import notify_admin
 
 async def on_startup(dispatcher):
-    pass
     """for admin_id in admin_list:
         await admin_bot.send_message(admin_id, "Starting..")"""
     asyncio.ensure_future(notify_admin())
