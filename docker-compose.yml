@@ -19,6 +19,7 @@ services:
                        python bot.py"]
     depends_on:
       - bar-db
+    restart: always
   bar-client-bot:
     build: ./
     volumes:
@@ -28,7 +29,7 @@ services:
     depends_on:
       - bar-db
       - bar-admin-bot
-    restart: on-failure
+    restart: always
 
 volumes:
   queue:
