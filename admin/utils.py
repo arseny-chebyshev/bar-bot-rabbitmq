@@ -19,7 +19,7 @@ async def notify_admin():
                     print(order)
                     for dish in DishQuantity.objects.filter(order=order):
                         quantities.append(f"{dish.dish.name} x {dish.quantity}: {dish.dish.price * dish.quantity} LKR\n")
-                    text = f"""\nНовый заказ #{order.id}
+                    text = f"""\n<strong>Новый заказ #{order.id}</strong>
 Заказал: {f'<a href="https://t.me/{order.guest.username}">{order.guest.name}</a>' if order.guest.username else order.guest.name}
 Телефон гостя: {order.guest.phone}
 Состав: \n{''.join(quantities)}
