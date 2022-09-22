@@ -1,6 +1,6 @@
 import operator
 from client.states.client import RegisterUser
-from db.models import Dish
+from db.models import *
 from filters.base import is_button_selected
 from aiogram.types import CallbackQuery
 from aiogram_dialog import Window, DialogManager, Dialog
@@ -8,7 +8,7 @@ from aiogram_dialog.widgets.kbd import Multiselect, Button, Group, Back, Managed
 from aiogram_dialog.widgets.text import Format, Const
 from states.client import DishDialog
 from keyboards.dialog.base_dialog_buttons import cancel_button, continue_button, default_nav
-from keyboards.menu.kbds import request_contact_button_kbd
+from keyboards.menu.kbds import request_contact_button_kbd, new_order_button_kbd
 
 async def switch_page(c: CallbackQuery, b: Button, d: DialogManager):
     pagination_key = d.data['aiogd_context'].widget_data['navigate_button']
@@ -42,7 +42,12 @@ async def confirm_order(c: CallbackQuery, b: Button, d: DialogManager):
 
 Итого: {order['summary']} LKR"""
     await c.message.delete()
-    await c.message.answer(details, reply_markup=request_contact_button_kbd)
+    guest = Guest.objects.filter(id=c.from_user.id).first()
+    if guest:
+        order['guest'] = guest
+        await c.message.answer(details, reply_markup=new_order_button_kbd)
+    else:
+        await c.message.answer(details, reply_markup=request_contact_button_kbd)
     await d.data['state'].update_data({"order": order})
     await d.mark_closed()
     await RegisterUser.send_contact.set()
@@ -87,7 +92,7 @@ async def get_quantity_for_dish(**kwargs):
     dish = Dish.objects.filter(id=kwargs['aiogd_context'].widget_data['current']).first()
     dish_id = dish.id
     if not f'dish_{dish_id}_quantity' in kwargs['aiogd_context'].widget_data.keys():
-        kwargs['aiogd_context'].widget_data[f'dish_{dish_id}_quantity'] = 0
+        kwargs['aiogd_context'].widget_data[f'dish_{dish_id}_quantity'] = 1
     quantity = kwargs['aiogd_context'].widget_data[f'dish_{dish_id}_quantity']
     minus = bool(int(quantity))
     back = int(quantity) == 0
