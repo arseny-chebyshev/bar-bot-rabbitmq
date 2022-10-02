@@ -33,7 +33,7 @@ async def process_contact(msg: Message, state: FSMContext):
         DishQuantity.objects.create(order=order, dish=order_dish, quantity=dish['quantity'])
     guest.debt -= data['order']['summary']
     guest.save()
-    await msg.answer(f"""Спасибо! Заказ был оформлен.\nНомер заказа: <strong>{order.id}</strong>
+    await msg.answer(f"""Спасибо! Заказ был оформлен.\n<strong>Номер заказа: {order.id}</strong>
 Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)
     with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
@@ -61,7 +61,7 @@ async def create_order(msg: Message, state: FSMContext):
         DishQuantity.objects.create(order=order, dish=order_dish, quantity=dish['quantity'])
     guest.debt -= data['order']['summary']
     guest.save()
-    await msg.answer(f"""Спасибо! Заказ был оформлен.\nНомер заказа: <strong>{order.id}</strong>
+    await msg.answer(f"""Спасибо! Заказ был оформлен.\n<strong>Номер заказа: {order.id}</strong>
 Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)
     with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
@@ -91,7 +91,7 @@ async def answer_callback(query: CallbackQuery, dialog_manager=DialogManager):
             DishQuantity.objects.create(order=new_order, dish=dish.dish, quantity=dish.quantity)
         old_order.guest.debt -= old_order.total
         old_order.guest.save()
-        await query.message.answer(f"""Спасибо! Заказ был оформлен.\nНомер заказа: <strong>{new_order.id}</strong>
+        await query.message.answer(f"""Спасибо! Заказ был оформлен.\n<strong>Номер заказа: {new_order.id}</strong>
 Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
         with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
             data = json.load(f)

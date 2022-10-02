@@ -1,11 +1,11 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 request_contact_button_kbd = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text="🖊 Заказать", request_contact=True), KeyboardButton(text="❌ Отмена")],
+    [KeyboardButton(text="❌ Отмена"), KeyboardButton(text="🖊 Заказать", request_contact=True)],
 ], resize_keyboard=True)
 
 new_order_button_kbd = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text="🖊 Заказать"), KeyboardButton(text="❌ Отмена")],
+    [KeyboardButton(text="❌ Отмена"), KeyboardButton(text="🖊 Заказать")],
 ], resize_keyboard=True)
 
 dish_menu = ReplyKeyboardMarkup(keyboard=[
