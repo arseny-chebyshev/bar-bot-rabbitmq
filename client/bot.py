@@ -5,8 +5,8 @@ from settings import admin_list
 
 async def on_startup(dispatcher):
     pass
-    for admin_id in admin_list:
-        await client_bot.send_message(admin_id, "Starting..")
+#    for admin_id in admin_list:
+#        await client_bot.send_message(admin_id, "Starting..")
 
 async def on_shutdown(dispatcher):
     pass
