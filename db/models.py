@@ -11,13 +11,19 @@ class Dish(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=8)
     
     def get_summary(self):
-        dish_quant = DishQuantity.objects.filter(dish=self).aggregate(total=models.Sum('quantity'))
-        return dish_quant['total']
+        summary = DishQuantity.objects.filter(dish=self).aggregate(quant=models.Sum('quantity'))
+        summary['total'] = summary['quant'] * self.price if summary['quant'] else 0
+        return summary
 
     def __str__(self) -> str:
         return f"{self.name}, {self.price} LKR"
+
     class Meta:
         ordering = ['id']
+
+    @classmethod
+    def get_total(cls):
+        return Dish.objects.filter(orders_with_dish__isnull=False).aggregate(total=models.Sum('price'))['total']
 
 class Guest(models.Model):
     id = models.BigIntegerField(primary_key=True, null=False, blank=False)

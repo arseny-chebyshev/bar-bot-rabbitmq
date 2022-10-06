@@ -4,6 +4,7 @@ from decimal import Decimal
 from db.models import Dish, DishQuantity, Order, Guest
 from pathlib import Path
 import aiogram
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram_dialog import DialogManager
@@ -61,8 +62,14 @@ async def create_order(msg: Message, state: FSMContext):
         DishQuantity.objects.create(order=order, dish=order_dish, quantity=dish['quantity'])
     guest.debt -= data['order']['summary']
     guest.save()
+    m = await msg.answer('⌛', reply_markup=ReplyKeyboardRemove())
+    await m.delete()
+    inline_kbd = InlineKeyboardMarkup(row_width=2).row(
+                    InlineKeyboardButton(text="Заказать ещё", callback_data=f"callback_new"))
     await msg.answer(f"""Спасибо! Заказ был оформлен.\n<strong>Номер заказа: {order.id}</strong>
-Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
+Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=inline_kbd)
+    print(type(m))
+    
     await state.reset_state(with_data=True)
     with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
         data = json.load(f)

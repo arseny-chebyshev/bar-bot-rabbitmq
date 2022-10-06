@@ -66,8 +66,10 @@ guest_detail =  Window(Format(text="Гость: {guest_details}\nЗаказы:\n
 
 async def get_dishes(**kwargs):
     dishes = Dish.objects.all()
-    quantities = [dish.get_summary() for dish in dishes]
-    return {"stat": '\n'.join([f"{dish.name}: {quant if quant else 0}" for dish, quant in zip(dishes, quantities)])}
+    summary = [dish.get_summary() for dish in dishes]
+    stat = '\n'.join([f"{dish.name}: {total['quant'] if total['quant'] else 0}, всего: {total['total']} LKR" for dish, total in zip(dishes, summary)])
+    stat += f'\nИтого: {Dish.get_total()} LKR'
+    return {"stat": stat}
 
 dish_stat = Window(Const("Общее количество заказов для каждой позиции:"),
                    Format("{stat}"),
