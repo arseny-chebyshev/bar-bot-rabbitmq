@@ -32,7 +32,7 @@ async def notify_admin():
                         try:
                             message = await admin_bot.send_message(chat_id=admin_id, text=text, reply_markup=inline_kbd)
                             asyncio.ensure_future(poll_order_message(chat_id=admin_id, message_id=message.message_id, order_id=order.id))
-                        except ChatNotFound or BotBlocked:
+                        except (ChatNotFound, BotBlocked):
                             continue
             data['orders'] = []
             f.seek(0)
