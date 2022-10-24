@@ -1,7 +1,7 @@
 import asyncio
 import json
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
-from aiogram.utils.exceptions import ChatNotFound
+from aiogram.utils.exceptions import ChatNotFound, BotBlocked
 from db.models import DishQuantity, Order
 from admin.loader import admin_bot
 from admin.settings import admin_list
@@ -32,7 +32,7 @@ async def notify_admin():
                         try:
                             message = await admin_bot.send_message(chat_id=admin_id, text=text, reply_markup=inline_kbd)
                             asyncio.ensure_future(poll_order_message(chat_id=admin_id, message_id=message.message_id, order_id=order.id))
-                        except ChatNotFound:
+                        except ChatNotFound or BotBlocked:
                             continue
             data['orders'] = []
             f.seek(0)
