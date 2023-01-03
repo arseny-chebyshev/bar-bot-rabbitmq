@@ -9,7 +9,6 @@ from settings import admin_list
 from states.admin import AdminDialog, DishState
 from keyboards.menu.kbds import *
 from loader import dp
-from utils import notify_admin
 
 
 @dp.message_handler(commands='start')

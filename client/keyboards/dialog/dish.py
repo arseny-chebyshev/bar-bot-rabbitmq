@@ -53,17 +53,14 @@ async def confirm_order(c: CallbackQuery, b: Button, d: DialogManager):
     await RegisterUser.send_contact.set()
 
 async def get_dishes(**kwargs):
-    """if not 'navigate_button' in list(kwargs['aiogd_context'].widget_data.keys()):
+    if not 'navigate_button' in list(kwargs['aiogd_context'].widget_data.keys()):
         kwargs['aiogd_context'].widget_data['navigate_button'] = 0
     dish_list = Dish.objects.all()
     kwargs['aiogd_context'].widget_data['menu_len'] = len(dish_list)
     start = kwargs['aiogd_context'].widget_data['navigate_button']
     end = start + 5
-    try:
-        return {"dishes": [(str(dish), dish.id) for dish in dish_list[start:end]]}
-    except IndexError:
-        return {"dishes": [(str(dish), dish.id) for dish in dish_list[start:-1]]}"""
-    return {"dishes": [(str(dish), dish.id) for dish in Dish.objects.all()]} #пагинация убрана по просьбе заказчика
+    return {"dishes": [(str(dish), dish.id) for dish in dish_list[start:end]]}
+    #return {"dishes": [(str(dish), dish.id) for dish in Dish.objects.all()]} #пагинация убрана по просьбе заказчика
 
 @is_button_selected(key='m_dish')
 async def switch_to_dish_details(c: CallbackQuery, b: Button, d: DialogManager):
@@ -79,9 +76,10 @@ dish_list = Window(Const("Привет👋! Я помогу тебе сдела�
                                      id="m_dish", items='dishes', on_click=edit_quantity,
                                      item_id_getter=operator.itemgetter(1)), 
                          width=1),
-                   Button(Const("➡Оформить"),
-                          on_click=confirm_order,
-                          id='continue'),
+                   Group(Button(Const("<"), id='prev_page', on_click=switch_page),
+                         Button(Const("➡Оформить"), on_click=confirm_order, id='continue'),
+                         Button(Const(">"), id='next_page', on_click=switch_page),
+                         width=3),
                           cancel_button,
                           getter=get_dishes,
                           state=DishDialog.select_dish)

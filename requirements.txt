@@ -3,3 +3,4 @@ aiogram_dialog
 python-dotenv
 psycopg2
 django
+pika

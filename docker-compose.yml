@@ -9,10 +9,13 @@ services:
       - POSTGRES_USER=$DB_USER
       - POSTGRES_PASSWORD=$DB_PASSWORD
       - POSTGRES_DB=$DB_NAME
+  
+  rabbitmq:
+    image: rabbitmq:3.11.5-alpine
+    restart: always
+    
   bar-admin-bot:
     build: ./
-    volumes:
-      - queue:/bot/queue:rw
     command: [sh, -c, "python manage.py makemigrations db &&
                        python manage.py migrate &&
                        cd admin &&
@@ -20,10 +23,9 @@ services:
     depends_on:
       - bar-db
     restart: always
+  
   bar-client-bot:
     build: ./
-    volumes:
-      - queue:/bot/queue:rw
     command: [sh, -c, "cd client &&
                        python bot.py"]
     depends_on:
@@ -32,5 +34,4 @@ services:
     restart: always
 
 volumes:
-  queue:
   bar_postgres_data:

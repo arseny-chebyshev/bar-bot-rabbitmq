@@ -17,7 +17,6 @@ from utils import wait_for_order
 
 @dp.message_handler(state=RegisterUser.send_contact, content_types=aiogram.types.ContentType.CONTACT)
 async def process_contact(msg: Message, state: FSMContext):
-    from client.utils import wait_for_order
     data = await state.get_data()
     guest_cred = {'id': int(msg.contact['user_id']), 
                   'name': f"{msg.contact['first_name']}{''.join([' ',msg.contact['last_name']]) if 'last_name' in dict(msg.contact).keys() else ''}",
@@ -37,13 +36,13 @@ async def process_contact(msg: Message, state: FSMContext):
     await msg.answer(f"""Спасибо! Заказ был оформлен.\n<strong>Номер заказа: {order.id}</strong>
 Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
     await state.reset_state(with_data=True)
-    with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
-        data = json.load(f)
-        data['orders'].append(order.id)
-        f.seek(0)
-        json.dump(data, f, indent=4)
-        f.truncate()
-    asyncio.ensure_future(wait_for_order(client_bot, msg.from_user.id, order.id))
+    # with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
+    #     data = json.load(f)
+    #     data['orders'].append(order.id)
+    #     f.seek(0)
+    #     json.dump(data, f, indent=4)
+    #     f.truncate()
+    # asyncio.ensure_future(wait_for_order(client_bot, msg.from_user.id, order.id))
     
 
 @dp.message_handler(Text(equals=["❌ Отмена"]), state=RegisterUser.send_contact)
@@ -53,7 +52,6 @@ async def cancel_record(msg: Message, state: FSMContext):
 
 @dp.message_handler(Text(equals=["🖊 Заказать"]), state=RegisterUser.send_contact)
 async def create_order(msg: Message, state: FSMContext):
-    from client.utils import wait_for_order
     data = await state.get_data()
     guest = data['order']['guest']
     order = Order.objects.create(guest=guest, is_ready=False, total=Decimal(data['order']['summary']))
@@ -71,13 +69,13 @@ async def create_order(msg: Message, state: FSMContext):
     print(type(m))
     
     await state.reset_state(with_data=True)
-    with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
-        data = json.load(f)
-        data['orders'].append(order.id)
-        f.seek(0)
-        json.dump(data, f, indent=4)
-        f.truncate()
-    asyncio.ensure_future(wait_for_order(client_bot, msg.from_user.id, order.id))
+    # with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
+    #     data = json.load(f)
+    #     data['orders'].append(order.id)
+    #     f.seek(0)
+    #     json.dump(data, f, indent=4)
+    #     f.truncate()
+    # asyncio.ensure_future(wait_for_order(client_bot, msg.from_user.id, order.id))
 
 @dp.message_handler(state=RegisterUser.send_contact)
 async def require_push(msg: Message, state: FSMContext):
@@ -100,13 +98,13 @@ async def answer_callback(query: CallbackQuery, dialog_manager=DialogManager):
         old_order.guest.save()
         await query.message.answer(f"""Спасибо! Заказ был оформлен.\n<strong>Номер заказа: {new_order.id}</strong>
 Как только заказ будет готов, я пришлю тебе сообщение.""", reply_markup=ReplyKeyboardRemove())
-        with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
-            data = json.load(f)
-            data['orders'].append(new_order.id)
-            f.seek(0)
-            json.dump(data, f, indent=4)
-            f.truncate()
-        asyncio.ensure_future(wait_for_order(client_bot, query.from_user.id, new_order.id))
+        # with open('../queue/orders.json', 'r+', encoding='utf-8') as f:
+        #     data = json.load(f)
+        #     data['orders'].append(new_order.id)
+        #     f.seek(0)
+        #     json.dump(data, f, indent=4)
+        #     f.truncate()
+        # asyncio.ensure_future(wait_for_order(client_bot, query.from_user.id, new_order.id))
     elif call.startswith('new'):
         await query.answer("Новый заказ!")
         await dialog_manager.start(DishDialog.select_dish)
