@@ -1,14 +1,20 @@
-import asyncio
-from aiogram import executor
+import sys
+sys.path.append('..')
+
+from concurrent.futures import ThreadPoolExecutor
+import threading
 import logging
-from loader import dp, admin_bot, registry
-from settings import admin_list
-from utils import notify_admin
+from aiogram import executor
+from loader import dp, admin_bot, registry, channel
+from receivers import notify_admin
 
 async def on_startup(dispatcher):
-#    for admin_id in admin_list:
-#        await admin_bot.send_message(admin_id, "Starting..")
-    asyncio.ensure_future(notify_admin())
+    channel.queue_declare(queue='orders_not_ready')
+    channel.basic_consume(queue='orders_not_ready', auto_ack=True, 
+                          on_message_callback=notify_admin)
+    th = threading.Thread(target=channel.start_consuming, daemon=True)
+    th.start()
+
 
 async def on_shutdown(dispatcher):
     pass
@@ -22,4 +28,5 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     executor.start_polling(dispatcher=dp, on_startup=on_startup)
     
-main()
+if __name__ == '__main__':
+    main()

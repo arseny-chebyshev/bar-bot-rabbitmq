@@ -1,7 +1,8 @@
-import json
+import os
+import pika
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db import models
 from manage import init_django
 
 init_django()
@@ -27,6 +28,7 @@ class Dish(models.Model):
 
 class Guest(models.Model):
     id = models.BigIntegerField(primary_key=True, null=False, blank=False)
+    is_admin = models.BooleanField(default=False, null=False, blank=False)
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=50)
     username = models.CharField(blank=True, null=True, max_length=255)
@@ -56,3 +58,15 @@ class DishQuantity(models.Model):
 
     def __str__(self):
         return f"{self.dish}: {self.quantity} шт."
+
+
+@receiver(post_save, sender=Order)
+def send_order(signal, sender, instance, created, **kwargs):
+    routing_keys = {True: 'orders_ready', False: 'orders_not_ready'}
+    amqp_conn = pika.BlockingConnection(pika.ConnectionParameters(os.getenv('AMQP_HOST')))
+    channel = amqp_conn.channel()
+    channel.queue_declare(routing_keys[instance.is_ready])
+    channel.basic_publish(exchange='', 
+                          routing_key=routing_keys[instance.is_ready], 
+                          body=str(instance.id))
+    amqp_conn.close()

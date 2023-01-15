@@ -18,11 +18,7 @@ def init_django():
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
-        #'HOST': os.getenv('DB_HOST', 'localhost'), 
-        # Docker запускает контейнер PostgreSQL не на 'localhost', 
-        # а на имени контейнера в docker-compose: в данном случае, 'db'. 
-        # https://stackoverflow.com/questions/70633841/django-docker-connection-to-server-at-localhost-127-0-0-1-port-5432-fail
-        'HOST': 'bar-db',
+        'HOST': os.getenv('DB_HOST', 'localhost'), 
         'PORT': os.getenv('DB_PORT'),
     }
 }
