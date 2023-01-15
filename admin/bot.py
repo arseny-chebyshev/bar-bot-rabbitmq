@@ -1,16 +1,17 @@
 import sys
-sys.path.insert(0, '..')
+sys.path.append('..')
 
+from concurrent.futures import ThreadPoolExecutor
 import threading
 import logging
 from aiogram import executor
 from loader import dp, admin_bot, registry, channel
-from settings import admin_list
 from receivers import notify_admin
 
 async def on_startup(dispatcher):
     channel.queue_declare(queue='orders_not_ready')
-    channel.basic_consume(queue='orders_not_ready', auto_ack=True, on_message_callback=notify_admin)
+    channel.basic_consume(queue='orders_not_ready', auto_ack=True, 
+                          on_message_callback=notify_admin)
     th = threading.Thread(target=channel.start_consuming, daemon=True)
     th.start()
 

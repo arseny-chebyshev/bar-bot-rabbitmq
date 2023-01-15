@@ -28,6 +28,7 @@ class Dish(models.Model):
 
 class Guest(models.Model):
     id = models.BigIntegerField(primary_key=True, null=False, blank=False)
+    is_admin = models.BooleanField(default=False, null=False, blank=False)
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=50)
     username = models.CharField(blank=True, null=True, max_length=255)

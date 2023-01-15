@@ -1,9 +1,8 @@
 import asyncio
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import ChatNotFound, BotBlocked
-from admin.settings import admin_list
 from admin.loader import admin_bot
-from db.models import Order, DishQuantity
+from db.models import Order, DishQuantity, Guest
 
 def notify_admin(ch, method, properties, body):
     loop = asyncio.new_event_loop()
@@ -25,19 +24,20 @@ async def _notify_admin(body):
 Телефон гостя: {order.guest.phone}
 Состав: \n{''.join(quantities)}
 Сумма: {order.total} LKR"""
-    for admin_id in admin_list:
+    for admin in Guest.objects.filter(is_admin=True):
         try:
-            message = await admin_bot.send_message(chat_id=admin_id, 
+            message = await admin_bot.send_message(chat_id=admin.id, 
                                                    text=text, 
                                                    reply_markup=InlineKeyboardMarkup(row_width=2).row(
                         InlineKeyboardButton(text="Отметить готовым", callback_data=f"callback_ready{order.id}"),
                         InlineKeyboardButton(text="Скрыть", callback_data=f"callback_hide{order.id}")
                         ))
-            asyncio.create_task(poll_order_message(chat_id=admin_id, msg_id=message.message_id, order_id=order.id))
+            print(f"message sent to admin: {message = }, {message.message_id = }")
+            await poll_order_message(chat_id=admin.id, msg_id=message.message_id, order_id=order.id)
         except (ChatNotFound, BotBlocked):
             continue
 
-async def poll_order_message(chat_id, msg_id, order_id):
+async def poll_order_message(chat_id: str, msg_id: int, order_id):
     while True:
         order = Order.objects.filter(id=order_id).first()
         if not order:
@@ -49,3 +49,4 @@ async def poll_order_message(chat_id, msg_id, order_id):
                         )
             await admin_bot.edit_message_reply_markup(chat_id=chat_id, message_id=msg_id, reply_markup=inline_kbd)
             break
+        await asyncio.sleep(2)

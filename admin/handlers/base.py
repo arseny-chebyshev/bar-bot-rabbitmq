@@ -5,16 +5,17 @@ from pathlib import Path
 from aiogram.dispatcher import FSMContext
 from aiogram_dialog import DialogManager
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
-from settings import admin_list
 from states.admin import AdminDialog, DishState
 from keyboards.menu.kbds import *
-from loader import dp
-
+from loader import dp, admin_bot
+from db.models import Guest
 
 @dp.message_handler(commands='start')
 async def start_admin(msg: Message, dialog_manager: DialogManager):
-    if str(msg.from_user.id) in admin_list:
-        await dialog_manager.start(AdminDialog.start)
+    guest = Guest.objects.filter(id=msg.from_user.id).first()
+    if guest:
+        if guest.is_admin: 
+            await dialog_manager.start(AdminDialog.start)
     else:
         await msg.answer("Нет прав администратора для доступа.")
 

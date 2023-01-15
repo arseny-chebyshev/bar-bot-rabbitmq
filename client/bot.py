@@ -1,11 +1,10 @@
 import sys
-sys.path.insert(0, '..')
+sys.path.append('..')
 
 import threading
 import logging
 from aiogram import executor
 from loader import dp, client_bot, registry, channel
-from settings import admin_list
 from receivers import notify_client
 
 async def on_startup(dispatcher):

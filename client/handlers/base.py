@@ -13,7 +13,7 @@ from aiogram.dispatcher.filters import Text
 from states.client import RegisterUser, DishDialog, DishState
 from keyboards.menu.kbds import *
 from loader import dp, client_bot
-from utils import wait_for_order
+
 
 @dp.message_handler(state=RegisterUser.send_contact, content_types=aiogram.types.ContentType.CONTACT)
 async def process_contact(msg: Message, state: FSMContext):
